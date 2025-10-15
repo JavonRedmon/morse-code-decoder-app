@@ -18,7 +18,8 @@ function MorseCodeConverter() {
   const [currentMode, setCurrentMode] = useState<'textToMorse' | 'morseToText'>('textToMorse');
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('Your converted text will appear here...');
-  const [theme, setTheme] = useState('default');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [speed, setSpeed] = useState(5);
   const [charCount, setCharCount] = useState(0);
@@ -53,37 +54,42 @@ function MorseCodeConverter() {
   };
 
   useEffect(() => {
+    setMounted(true);
     // Only access localStorage on client-side
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('morseTheme') || 'default';
+    const savedTheme = localStorage.getItem('morseTheme') as 'light' | 'dark' | null;
+    if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
       setTheme(savedTheme);
-      
-      const savedSound = localStorage.getItem('morseSound');
-      if (savedSound !== null) {
-        setSoundEnabled(savedSound === 'true');
-      }
-      
-      const savedHistory = JSON.parse(localStorage.getItem('morseHistory') || '[]');
-      setConversionHistory(savedHistory);
-      
-      const savedStats = JSON.parse(localStorage.getItem('morseStats') || '{"totalConversions":0,"charactersConverted":0}');
-      setStats(savedStats);
+    } else {
+      // Check system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? 'dark' : 'light');
     }
+    
+    const savedSound = localStorage.getItem('morseSound');
+    if (savedSound !== null) {
+      setSoundEnabled(savedSound === 'true');
+    }
+    
+    const savedHistory = JSON.parse(localStorage.getItem('morseHistory') || '[]');
+    setConversionHistory(savedHistory);
+    
+    const savedStats = JSON.parse(localStorage.getItem('morseStats') || '{"totalConversions":0,"charactersConverted":0}');
+    setStats(savedStats);
   }, []);
 
   useEffect(() => {
-    document.body.className = theme === 'default' ? '' : `${theme}-theme`;
-  }, [theme]);
+    if (mounted) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('morseTheme', theme);
+    }
+  }, [theme, mounted]);
 
   useEffect(() => {
     setCharCount(inputText.length);
   }, [inputText]);
 
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('morseTheme', newTheme);
-    }
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   const handleModeChange = (mode: 'textToMorse' | 'morseToText') => {
@@ -358,22 +364,34 @@ function MorseCodeConverter() {
       <div className="container">
         {/* Hero Section */}
         <div className="hero-section">
-          <div className="animated-icon">🔤⚡</div>
+          <div className="app-icon">
+            <svg width="80" height="80" viewBox="0 0 527 527" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="263.5" cy="263.5" r="253.5" stroke="currentColor" strokeWidth="20"/>
+              <line x1="241.5" y1="140" x2="285.5" y2="140" stroke="currentColor" strokeWidth="20" strokeLinecap="round"/>
+              <line x1="220.5" y1="180" x2="250.5" y2="180" stroke="currentColor" strokeWidth="20" strokeLinecap="round"/>
+              <line x1="276.5" y1="180" x2="306.5" y2="180" stroke="currentColor" strokeWidth="20" strokeLinecap="round"/>
+              <circle cx="263.5" cy="220" r="10" fill="currentColor"/>
+              <line x1="220.5" y1="370" x2="306.5" y2="370" stroke="currentColor" strokeWidth="20" strokeLinecap="round"/>
+            </svg>
+          </div>
           <h1>Morse Code Converter</h1>
           <p className="subtitle">Convert between text and Morse code instantly</p>
           
           {/* Stats Display */}
           <div className="stats-bar">
             <div className="stat-item">
-              <div className="stat-icon">🔄</div>
+              <svg className="stat-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17 1L21 5M21 5L17 9M21 5H9C5.13401 5 2 8.13401 2 12C2 15.866 5.13401 19 9 19H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <div className="stat-info">
                 <div className="stat-value">{stats.totalConversions}</div>
                 <div className="stat-label">Conversions</div>
               </div>
             </div>
-            <div className="stat-divider"></div>
             <div className="stat-item">
-              <div className="stat-icon">✍️</div>
+              <svg className="stat-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <div className="stat-info">
                 <div className="stat-value">{stats.charactersConverted}</div>
                 <div className="stat-label">Characters</div>
@@ -382,17 +400,32 @@ function MorseCodeConverter() {
           </div>
         </div>
 
-        <div className="theme-label">🎨 Choose Theme:</div>
-        <div className="theme-selector">
-          {['default', 'dark', 'ocean', 'sunset', 'forest'].map((t) => (
-            <div
-              key={t}
-              className={`theme-btn ${t} ${theme === t ? 'active' : ''}`}
-              onClick={() => handleThemeChange(t)}
-              title={`${t.charAt(0).toUpperCase() + t.slice(1)} Theme`}
-            />
-          ))}
-        </div>
+        {/* Theme Toggle */}
+        {mounted && (
+          <button 
+            className="theme-toggle" 
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2"/>
+                <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            )}
+          </button>
+        )}
 
         <div className="mode-selector">
           <button
