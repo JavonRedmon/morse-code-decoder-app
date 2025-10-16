@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { workos, clientId } from '@/lib/workos';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
