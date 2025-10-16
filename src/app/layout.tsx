@@ -3,7 +3,28 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Morse Code Converter - Convert Text to Morse Code",
-  description: "Convert between text and Morse code instantly. Support for letters, numbers, and punctuation with audio playback.",
+  description: "Convert between text and Morse code instantly. Real-time conversion with audio, flashlight, and vibration output. Installable as PWA.",
+  openGraph: {
+    title: "Morse Code Converter",
+    description: "Real-time Morse code converter with audio playback, flashlight signal, and vibration. Works offline as a PWA.",
+    type: "website",
+    url: "https://your-domain.com",
+    images: [
+      {
+        url: "/icon-512.svg",
+        width: 512,
+        height: 512,
+        alt: "Morse Code Converter"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Morse Code Converter",
+    description: "Real-time Morse code converter with audio playback, flashlight signal, and vibration. Works offline as a PWA.",
+    images: ["/icon-512.svg"]
+  },
+  keywords: ["morse code", "converter", "translator", "audio", "PWA", "offline", "flashlight", "vibration"]
 };
 
 export default function RootLayout({
