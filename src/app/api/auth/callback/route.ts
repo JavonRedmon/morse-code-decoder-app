@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { workos, clientId, redirectUri } from '@/lib/workos';
+import { workos, clientId } from '@/lib/workos';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

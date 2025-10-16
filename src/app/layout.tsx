@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   title: "Morse Code Converter - Convert Text to Morse Code",
   description: "Convert between text and Morse code instantly. Real-time conversion with audio, flashlight, and vibration output. Installable as PWA.",
   openGraph: {

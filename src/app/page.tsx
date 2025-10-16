@@ -391,11 +391,13 @@ function MorseCodeConverter() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       const track = stream.getVideoTracks()[0];
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const imageCapture = new (window as any).ImageCapture(track);
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!track.getCapabilities || !(track.getCapabilities() as any).torch) {
+      // Type assertion for MediaStreamTrack with torch capability
+      interface MediaTrackCapabilities {
+        torch?: boolean;
+      }
+      
+      if (!track.getCapabilities || !(track.getCapabilities() as MediaTrackCapabilities).torch) {
         showNotificationMessage('Flashlight not supported');
         track.stop();
         return;
